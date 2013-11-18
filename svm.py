@@ -2,10 +2,13 @@
 from xlrd import open_workbook
 from xlwt import *
 from sklearn import svm
+from sklearn import *
+from sklearn.cross_validation import KFold
 from math import pow
 from collections import defaultdict 
 import hashlib
 import itertools
+import numpy as np
 
 book = open_workbook('Adomain_Substrate.xls')
 worksheet = book.sheet_by_name('Adomain_Substrate')
@@ -151,6 +154,26 @@ def map_seq(seq, AAn):
 	mapped_features += [0 for _ in range(max_seq_len-len(seq))] # pad with zero's (seqs have diff lengths)
 	return mapped_features
 
+
+'''X, Y input vectors,
+classifier the different classifier with varying kernels,
+test_type: the type of testing that should be done ie kfold,
+test_parameters: the parameters that were ordered with'''
+def train_test_SVM(X, Y, classifier, test_type, test_params):
+	#Train SVM
+	if test_type == 'k_fold':
+		kf = KFold(len(Y), n_folds=test_params[0], indices=True)
+		i = 0
+		for train, test in kf:
+			score = classifier.fit(X[train], Y[train]).score(X[test], Y[test])
+			print "score: " + str(score)
+			write(0, i, score)
+			i+=1
+
+def write(x, y, value):
+	worksheet_write.write(x, y, value)
+	
+
 #Map for different substrates (classes)
 subs = {'dhpg':0,'horn':1, 'pip':2, 'bht':3, 'dab':4,'dhb':5,
 		'Orn':6, 'dht':7, 'hpg':8, 'A':9, 'C':10, 'E':11, 'D':12, 'G':13,
@@ -158,93 +181,14 @@ subs = {'dhpg':0,'horn':1, 'pip':2, 'bht':3, 'dab':4,'dhb':5,
 		'R':22,'T':23, 'W':24, 'V':25, 'Y':26, 'orn':27,
 		'beta-ala':28, 'ORN':29, 'hyv-d':30, 'aad':31}
 
-X = []
-Y = []
+#X = []
+#Y = []
 
-
-
-
-num_rows = worksheet.nrows - 1 #1546 sequences
-curr_row = 0
-substrate_cell = 1
-seq_cell = 2
-
-max_seq_len = 465 
-
-#Training set
-all_2_grams = all_n_grams(2)
-#all_3_grams = all_n_grams(3)
-#all_4_grams = all_n_grams(4)
-while curr_row < 1100:
-	curr_row += 1
-	seq = worksheet.cell_value(curr_row, seq_cell)
-	substrate = worksheet.cell_value(curr_row, substrate_cell)
-
-	features = []
-
-	features += n_gram_counts(seq, 2, all_2_grams)
-	#features += AA_counts(seq)
-	#features += AAn_counts(seq, AA4)
-	#features += map_seq(seq, AA1)
-	#features += map_seq(seq, AA2)
-	#features += map_seq(seq, AA3)
-	#features += map_seq(seq, AA4)
-	#features += map_seq(seq, AA5)
-
-	X.append(features)
-	Y.append(subs[substrate])
-
-#Train SVM
-#clf_rfb = svm.SVC(kernel='rbf')
-#clf_rfb.fit(X, Y)
-#for i in range(2, 5):
-#clf_lin = svm.SVC(kernel='poly', degree=i, coef0=1)
+X = np.array([[0., 0.], [1., 1.], [-1., -1.], [2,2],[0., 0.], [1., 1.], [-1., -1.], [2,2]])
+Y = np.array([0, 1, 0, 1,1,1,1,1])
 clf_lin = svm.SVC(kernel='linear')
-clf_lin = clf_lin.fit(X, Y)
+train_test_SVM(X,Y, clf_lin, 'k_fold', [4])
 
-#Test set
-rfb_num_correct = 0
-rfb_num_wrong = 0
-lin_num_correct = 0
-lin_num_wrong = 0
-
-
-
-while curr_row < num_rows:
-	curr_row += 1
-	seq = worksheet.cell_value(curr_row, seq_cell)
-	substrate = worksheet.cell_value(curr_row, substrate_cell)
-
-	features = []
-
-	features += n_gram_counts(seq, 2, all_2_grams)
-	#features += AA_counts(seq)
-	#features += AAn_counts(seq, AA4)
-	#features += map_seq(seq, AA1)
-	#features += map_seq(seq, AA2)
-	#features += map_seq(seq, AA3)
-	#features += map_seq(seq, AA4)
-	#features += map_seq(seq, AA5)
-
-	#rfb_pred = clf_rfb.predict(features)
-	#if rfb_pred[0] == subs[substrate]:
-	#	rfb_num_correct += 1
-	#else:
-	#	rfb_num_wrong += 1
-
-	lin_pred = clf_lin.predict(features)
-	if lin_pred[0] == subs[substrate]:
-		lin_num_correct += 1
-	else:
-		lin_num_wrong += 1
-
-
-#print "rfb: "
-#print float(rfb_num_correct) / float(rfb_num_correct + rfb_num_wrong) * 100
-print "linear: "
-accuracy = float(lin_num_correct) / float(lin_num_correct + lin_num_wrong) * 100
-print accuracy
-
-worksheet_write.write(0, 0, accuracy)
 book_write.save("svm_output.xls")
+
 
