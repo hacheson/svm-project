@@ -1,21 +1,10 @@
 
 from xlrd import open_workbook
-from xlwt import *
 from sklearn import svm
 from math import pow
 from collections import defaultdict 
 import hashlib
 import itertools
-
-book = open_workbook('Adomain_Substrate.xls')
-worksheet = book.sheet_by_name('Adomain_Substrate')
-
-book_write = Workbook()
-worksheet_write = book_write.add_sheet("Kernels")
-#worksheet_write.write(0, 0, "Display")
-#worksheet_write.write(1, 0, "Dominance") 
-
-
 
 #http://en.wikipedia.org/wiki/Amino_acid#Classification
 """
@@ -141,6 +130,8 @@ def AAn_counts(seq, AAn):
 		counts[AAn[a] - 1] += 1
 	return counts 
 
+
+max_seq_len = 465 
 #Map sequence to groupings
 #Len(feature vector) = len(seq)
 #v[i] = which group seq[i] is in according to AAn
@@ -152,99 +143,74 @@ def map_seq(seq, AAn):
 	return mapped_features
 
 #Map for different substrates (classes)
-subs = {'dhpg':0,'horn':1, 'pip':2, 'bht':3, 'dab':4,'dhb':5,
+subs_class_dict = {'dhpg':0,'horn':1, 'pip':2, 'bht':3, 'dab':4,'dhb':5,
 		'Orn':6, 'dht':7, 'hpg':8, 'A':9, 'C':10, 'E':11, 'D':12, 'G':13,
 		'F':14, 'I':15, 'K':16, 'L':17, 'N':18, 'Q':19, 'P':20, 'S':21,
 		'R':22,'T':23, 'W':24, 'V':25, 'Y':26, 'orn':27,
 		'beta-ala':28, 'ORN':29, 'hyv-d':30, 'aad':31}
 
-X = []
-Y = []
+#Open Workbook, return tuple (vector of sequences, vector of substrate classes)
+def getData():
+	seqs=[]
+	subs=[]
 
+	book = open_workbook('Adomain_Substrate.xls')
+	worksheet = book.sheet_by_name('Adomain_Substrate')
+	num_rows = worksheet.nrows
+	substrate_cell = 1
+	seq_cell = 2
+	for i in range (1, num_rows):
+		seq = worksheet.cell_value(i, seq_cell)
+		substrate = worksheet.cell_value(i, substrate_cell)
+		seqs.append(seq)
+		subs.append(subs_class_dict[substrate])
+	return (seqs, subs)
 
-
-
-num_rows = worksheet.nrows - 1 #1546 sequences
-curr_row = 0
-substrate_cell = 1
-seq_cell = 2
-
-max_seq_len = 465 
-
-#Training set
-all_2_grams = all_n_grams(2)
-#all_3_grams = all_n_grams(3)
-#all_4_grams = all_n_grams(4)
-while curr_row < 1100:
-	curr_row += 1
-	seq = worksheet.cell_value(curr_row, seq_cell)
-	substrate = worksheet.cell_value(curr_row, substrate_cell)
-
+#Return feature vector for a sequence
+#Takes variable keyword arguments
+#feature ="ngram", "AAcounts", "AAncounts", or "mapseq"
+#extra parameter n depending on given feature
+def getFeaturesFromSeq(seq, **kwargs):
 	features = []
+	f = kwargs["feature"]
+	AAn_dict = {1: AA1, 2: AA2, 3:AA3, 4:AA4, 5:AA5}
+	if f == "ngram":
+		n = kwargs["n"]
+		grams = all_n_grams(n)
+		features = n_gram_counts(seq, n, grams)
+	elif f == "AAcounts":
+		features = AA_counts(seq)
+	elif f == "AAncounts":
+		n = kwargs["n"]
+		features = AAn_counts(seq, AAn_dict[n])
+	elif f == "mapseq":
+		n = kwargs["n"]
+		features = map_seq(seq, AAn_dict[n])
+	return features
 
-	features += n_gram_counts(seq, 2, all_2_grams)
-	#features += AA_counts(seq)
-	#features += AAn_counts(seq, AA4)
-	#features += map_seq(seq, AA1)
-	#features += map_seq(seq, AA2)
-	#features += map_seq(seq, AA3)
-	#features += map_seq(seq, AA4)
-	#features += map_seq(seq, AA5)
-
-	X.append(features)
-	Y.append(subs[substrate])
-
-#Train SVM
-#clf_rfb = svm.SVC(kernel='rbf')
-#clf_rfb.fit(X, Y)
-#for i in range(2, 5):
-#clf_lin = svm.SVC(kernel='poly', degree=i, coef0=1)
-clf_lin = svm.SVC(kernel='linear')
-clf_lin = clf_lin.fit(X, Y)
-
-#Test set
-rfb_num_correct = 0
-rfb_num_wrong = 0
-lin_num_correct = 0
-lin_num_wrong = 0
+#Adds features to pre-existing X using getFeaturesFromSeq(seq, **kwargs)
+def addFeatures(seqs, X, **kwargs):
+	for i, seq in enumerate(seqs):
+		X[i] += getFeaturesFromSeq(seq, **kwargs)
+	return X
 
 
+"""  EXAMPLE
 
-while curr_row < num_rows:
-	curr_row += 1
-	seq = worksheet.cell_value(curr_row, seq_cell)
-	substrate = worksheet.cell_value(curr_row, substrate_cell)
+data = getData()
+seqs = data[0]
+X = [ [] for _ in range(0, len(seqs))] # Empty feature vector for every sequence
+Y = data[1]
 
-	features = []
+X = addFeatures(seqs, X, feature="ngram", n=2)
+X = addFeatures(seqs, X, feature="mapseq", n=1)
 
-	features += n_gram_counts(seq, 2, all_2_grams)
-	#features += AA_counts(seq)
-	#features += AAn_counts(seq, AA4)
-	#features += map_seq(seq, AA1)
-	#features += map_seq(seq, AA2)
-	#features += map_seq(seq, AA3)
-	#features += map_seq(seq, AA4)
-	#features += map_seq(seq, AA5)
+X_train = X[0:1100]
+Y_train = Y[0:1100]
+X_test = X[1100:]
+Y_test = Y[1100:]
 
-	#rfb_pred = clf_rfb.predict(features)
-	#if rfb_pred[0] == subs[substrate]:
-	#	rfb_num_correct += 1
-	#else:
-	#	rfb_num_wrong += 1
+clf= svm.SVC(kernel='linear').fit(X_train, Y_train)
+print clf.score(X_test, Y_test)
 
-	lin_pred = clf_lin.predict(features)
-	if lin_pred[0] == subs[substrate]:
-		lin_num_correct += 1
-	else:
-		lin_num_wrong += 1
-
-
-#print "rfb: "
-#print float(rfb_num_correct) / float(rfb_num_correct + rfb_num_wrong) * 100
-print "linear: "
-accuracy = float(lin_num_correct) / float(lin_num_correct + lin_num_wrong) * 100
-print accuracy
-
-worksheet_write.write(0, 0, accuracy)
-book_write.save("svm_output.xls")
-
+"""
