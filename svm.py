@@ -1,5 +1,6 @@
 
 from xlrd import open_workbook
+from xlwt import *
 from sklearn import svm
 from sklearn import *
 from sklearn.cross_validation import KFold
@@ -8,6 +9,8 @@ from collections import defaultdict
 import hashlib
 import itertools
 import numpy as np
+
+
 
 #http://en.wikipedia.org/wiki/Amino_acid#Classification
 """
@@ -151,6 +154,8 @@ classifier the different classifier with varying kernels,
 test_type: the type of testing that should be done ie kfold,
 test_parameters: the parameters that were ordered with'''
 def train_test_SVM(X, Y, classifier, test_type, test_params):
+	print 'train-test-svm'
+	print test_type
 	#Train SVM
 	if test_type == 'k_fold':
 		kf = KFold(len(Y), n_folds=test_params[0], indices=True)
@@ -218,18 +223,19 @@ def addFeatures(seqs, X, **kwargs):
 		X[i] += getFeaturesFromSeq(seq, **kwargs)
 	return X
 
-#X = []
-#Y = []
-
-'''X = np.array([[0., 0.], [1., 1.], [-1., -1.], [2,2],[0., 0.], [1., 1.], [-1., -1.], [2,2]])
-Y = np.array([0, 1, 0, 1,1,1,1,1])
-clf_lin = svm.SVC(kernel='linear')
-train_test_SVM(X,Y, clf_lin, 'k_fold', [4])
-
-book_write.save("svm_output.xls")'''
 
 
-"""  EXAMPLE
+'''
+THIS IS WHERE WE ACTUALLY DO STUFF.
+
+'''
+
+#example
+#opens workbooks
+book = open_workbook('Adomain_Substrate.xls')
+worksheet = book.sheet_by_name('Adomain_Substrate')
+book_write = Workbook()
+worksheet_write = book_write.add_sheet("Kernels")
 
 data = getData()
 seqs = data[0]
@@ -238,14 +244,14 @@ Y = data[1]
 
 X = addFeatures(seqs, X, feature="ngram", n=2)
 X = addFeatures(seqs, X, feature="mapseq", n=1)
+clf = clf= svm.SVC(kernel='linear')
+train_test_SVM(np.array(X), np.array(Y), clf, 'k_fold', [3])
 
-X_train = X[0:1100]
+'''X_train = X[0:1100]
 Y_train = Y[0:1100]
 X_test = X[1100:]
 Y_test = Y[1100:]
 
 clf= svm.SVC(kernel='linear').fit(X_train, Y_train)
-print clf.score(X_test, Y_test)
-
-"""
+print clf.score(X_test, Y_test)'''
 
