@@ -157,15 +157,14 @@ def train_test_SVM(X, Y, classifier, test_type, test_params):
 	#Train SVM
 	if test_type == 'k_fold':
 		kf = KFold(len(Y), n_folds=test_params[0], indices=True)
-		i = 0
+		score_sum = 0
 		for train, test in kf:
 			score = classifier.fit(X[train], Y[train]).score(X[test], Y[test])
 			print "score: " + str(score)
-			write(0, i, score)
-			i+=1
-
-def write(x, y, value):
-	worksheet_write.write(x, y, value)
+			score_sum += score
+		#we want the average of the predicted kernels
+		avg = score_sum/test_params[0]
+		return avg
 	
 
 #Map for different substrates (classes)
@@ -228,14 +227,9 @@ THIS IS WHERE WE ACTUALLY DO STUFF.
 
 '''
 
-#example
-#opens workbooks
-book = open_workbook('Adomain_Substrate.xls')
-worksheet = book.sheet_by_name('Adomain_Substrate')
-book_write = Workbook()
-worksheet_write = book_write.add_sheet("Kernels")
 
-data = getData()
+
+'''data = getData()
 seqs = data[0]
 X = [ [] for _ in range(0, len(seqs))] # Empty feature vector for every sequence
 Y = data[1]
@@ -243,7 +237,7 @@ Y = data[1]
 X = addFeatures(seqs, X, feature="ngram", n=2)
 X = addFeatures(seqs, X, feature="mapseq", n=1)
 clf = clf= svm.SVC(kernel='linear')
-train_test_SVM(np.array(X), np.array(Y), clf, 'k_fold', [3])
+train_test_SVM(np.array(X), np.array(Y), clf, 'k_fold', [3])'''
 
 '''X_train = X[0:1100]
 Y_train = Y[0:1100]
