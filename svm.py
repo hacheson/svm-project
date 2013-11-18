@@ -153,18 +153,20 @@ def map_seq(seq, AAn):
 classifier the different classifier with varying kernels,
 test_type: the type of testing that should be done ie kfold,
 test_parameters: the parameters that were ordered with'''
-def train_test_SVM(X, Y, classifier, test_type, test_params):
+def train_test_SVM(X, Y, classifier, test_type, **kwargs):
 	#Train SVM
 	if test_type == 'k_fold':
-		kf = KFold(len(Y), n_folds=test_params[0], indices=True)
+		print 'K: ' + str(kwargs["k"])
+		kf = KFold(len(Y), n_folds=kwargs["k"], indices=True)
 		score_sum = 0
 		for train, test in kf:
 			score = classifier.fit(X[train], Y[train]).score(X[test], Y[test])
 			print "score: " + str(score)
 			score_sum += score
 		#we want the average of the predicted kernels
-		avg = score_sum/test_params[0]
+		avg = score_sum/kwargs["k"]
 		return avg
+
 	
 
 #Map for different substrates (classes)
