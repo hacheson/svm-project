@@ -1,6 +1,5 @@
 
 from xlrd import open_workbook
-from xlwt import *
 from sklearn import svm
 from sklearn import *
 from sklearn.cross_validation import KFold
@@ -9,16 +8,6 @@ from collections import defaultdict
 import hashlib
 import itertools
 import numpy as np
-
-book = open_workbook('Adomain_Substrate.xls')
-worksheet = book.sheet_by_name('Adomain_Substrate')
-
-book_write = Workbook()
-worksheet_write = book_write.add_sheet("Kernels")
-#worksheet_write.write(0, 0, "Display")
-#worksheet_write.write(1, 0, "Dominance") 
-
-
 
 #http://en.wikipedia.org/wiki/Amino_acid#Classification
 """
@@ -144,6 +133,8 @@ def AAn_counts(seq, AAn):
 		counts[AAn[a] - 1] += 1
 	return counts 
 
+
+max_seq_len = 465 
 #Map sequence to groupings
 #Len(feature vector) = len(seq)
 #v[i] = which group seq[i] is in according to AAn
@@ -175,20 +166,86 @@ def write(x, y, value):
 	
 
 #Map for different substrates (classes)
-subs = {'dhpg':0,'horn':1, 'pip':2, 'bht':3, 'dab':4,'dhb':5,
+subs_class_dict = {'dhpg':0,'horn':1, 'pip':2, 'bht':3, 'dab':4,'dhb':5,
 		'Orn':6, 'dht':7, 'hpg':8, 'A':9, 'C':10, 'E':11, 'D':12, 'G':13,
 		'F':14, 'I':15, 'K':16, 'L':17, 'N':18, 'Q':19, 'P':20, 'S':21,
 		'R':22,'T':23, 'W':24, 'V':25, 'Y':26, 'orn':27,
 		'beta-ala':28, 'ORN':29, 'hyv-d':30, 'aad':31}
 
+
+#Open Workbook, return tuple (vector of sequences, vector of substrate classes)
+def getData():
+	seqs=[]
+	subs=[]
+
+	book = open_workbook('Adomain_Substrate.xls')
+	worksheet = book.sheet_by_name('Adomain_Substrate')
+	num_rows = worksheet.nrows
+	substrate_cell = 1
+	seq_cell = 2
+	for i in range (1, num_rows):
+		seq = worksheet.cell_value(i, seq_cell)
+		substrate = worksheet.cell_value(i, substrate_cell)
+		seqs.append(seq)
+		subs.append(subs_class_dict[substrate])
+	return (seqs, subs)
+
+#Return feature vector for a sequence
+#Takes variable keyword arguments
+#feature ="ngram", "AAcounts", "AAncounts", or "mapseq"
+#extra parameter n depending on given feature
+def getFeaturesFromSeq(seq, **kwargs):
+	features = []
+	f = kwargs["feature"]
+	AAn_dict = {1: AA1, 2: AA2, 3:AA3, 4:AA4, 5:AA5}
+	if f == "ngram":
+		n = kwargs["n"]
+		grams = all_n_grams(n)
+		features = n_gram_counts(seq, n, grams)
+	elif f == "AAcounts":
+		features = AA_counts(seq)
+	elif f == "AAncounts":
+		n = kwargs["n"]
+		features = AAn_counts(seq, AAn_dict[n])
+	elif f == "mapseq":
+		n = kwargs["n"]
+		features = map_seq(seq, AAn_dict[n])
+	return features
+
+#Adds features to pre-existing X using getFeaturesFromSeq(seq, **kwargs)
+def addFeatures(seqs, X, **kwargs):
+	for i, seq in enumerate(seqs):
+		X[i] += getFeaturesFromSeq(seq, **kwargs)
+	return X
+
 #X = []
 #Y = []
 
-X = np.array([[0., 0.], [1., 1.], [-1., -1.], [2,2],[0., 0.], [1., 1.], [-1., -1.], [2,2]])
+'''X = np.array([[0., 0.], [1., 1.], [-1., -1.], [2,2],[0., 0.], [1., 1.], [-1., -1.], [2,2]])
 Y = np.array([0, 1, 0, 1,1,1,1,1])
 clf_lin = svm.SVC(kernel='linear')
 train_test_SVM(X,Y, clf_lin, 'k_fold', [4])
 
-book_write.save("svm_output.xls")
+book_write.save("svm_output.xls")'''
 
+
+"""  EXAMPLE
+
+data = getData()
+seqs = data[0]
+X = [ [] for _ in range(0, len(seqs))] # Empty feature vector for every sequence
+Y = data[1]
+
+X = addFeatures(seqs, X, feature="ngram", n=2)
+X = addFeatures(seqs, X, feature="mapseq", n=1)
+
+X_train = X[0:1100]
+Y_train = Y[0:1100]
+X_test = X[1100:]
+Y_test = Y[1100:]
+
+clf= svm.SVC(kernel='linear').fit(X_train, Y_train)
+print clf.score(X_test, Y_test)
+
+"""
 
