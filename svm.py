@@ -1,5 +1,6 @@
 
 from xlrd import open_workbook
+from xlwt import *
 from sklearn import svm
 from math import pow
 from collections import defaultdict 
@@ -8,6 +9,13 @@ import itertools
 
 book = open_workbook('Adomain_Substrate.xls')
 worksheet = book.sheet_by_name('Adomain_Substrate')
+
+book_write = Workbook()
+worksheet_write = book_write.add_sheet("Kernels")
+#worksheet_write.write(0, 0, "Display")
+#worksheet_write.write(1, 0, "Dominance") 
+
+
 
 #http://en.wikipedia.org/wiki/Amino_acid#Classification
 """
@@ -153,6 +161,9 @@ subs = {'dhpg':0,'horn':1, 'pip':2, 'bht':3, 'dab':4,'dhb':5,
 X = []
 Y = []
 
+
+
+
 num_rows = worksheet.nrows - 1 #1546 sequences
 curr_row = 0
 substrate_cell = 1
@@ -186,6 +197,8 @@ while curr_row < 1100:
 #Train SVM
 #clf_rfb = svm.SVC(kernel='rbf')
 #clf_rfb.fit(X, Y)
+#for i in range(2, 5):
+#clf_lin = svm.SVC(kernel='poly', degree=i, coef0=1)
 clf_lin = svm.SVC(kernel='linear')
 clf_lin = clf_lin.fit(X, Y)
 
@@ -194,6 +207,9 @@ rfb_num_correct = 0
 rfb_num_wrong = 0
 lin_num_correct = 0
 lin_num_wrong = 0
+
+
+
 while curr_row < num_rows:
 	curr_row += 1
 	seq = worksheet.cell_value(curr_row, seq_cell)
@@ -226,4 +242,9 @@ while curr_row < num_rows:
 #print "rfb: "
 #print float(rfb_num_correct) / float(rfb_num_correct + rfb_num_wrong) * 100
 print "linear: "
-print float(lin_num_correct) / float(lin_num_correct + lin_num_wrong) * 100
+accuracy = float(lin_num_correct) / float(lin_num_correct + lin_num_wrong) * 100
+print accuracy
+
+worksheet_write.write(0, 0, accuracy)
+book_write.save("svm_output.xls")
+
