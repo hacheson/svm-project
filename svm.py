@@ -154,8 +154,6 @@ classifier the different classifier with varying kernels,
 test_type: the type of testing that should be done ie kfold,
 test_parameters: the parameters that were ordered with'''
 def train_test_SVM(X, Y, classifier, test_type, test_params):
-	print 'train-test-svm'
-	print test_type
 	#Train SVM
 	if test_type == 'k_fold':
 		kf = KFold(len(Y), n_folds=test_params[0], indices=True)
