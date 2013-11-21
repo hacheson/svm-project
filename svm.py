@@ -103,6 +103,20 @@ def all_n_grams(n):
 		grams[index] = gram
 	return grams
 
+#Returns list of all possible AAn n_grams
+#e.g. a 3-gram may be '152': AA in 1st group, AA in 5th group, ...
+def all_AAn_n_grams(AAn, n):
+    num_groups = len(set(AAn.values()))
+    groups = [i for i in range(1, num_groups+1)]
+    grams = list(itertools.product(groups, repeat=n))
+
+    for index, group_tuple in enumerate(grams):
+		gram = ""
+		for x in group_tuple:
+			gram += str(x)
+		grams[index] = gram
+    return grams
+
 #Returns vector counting how many of each possible n_gram occured
 #Length of vector is length of all_n_grams
 #occurences[i] = # times all_n_grams[i] occured in seq
@@ -114,6 +128,16 @@ def n_gram_counts(seq, n, all_n_grams):
 		for j in range(i, i+n):
 			gram += seq[j]
 		index = all_n_grams.index(gram)
+		occurences[index] += 1
+	return occurences
+
+def AAn_n_gram_counts(seq, AAn, n, all_AAn_n_grams):
+	occurences = [0]*len(all_AAn_n_grams)
+	for i in range(0, len(seq) - n):
+		gram = ''
+		for j in range(i, i+n):
+			gram += str(AAn[seq[j]])
+		index = all_AAn_n_grams.index(gram)
 		occurences[index] += 1
 	return occurences
 
@@ -227,6 +251,11 @@ def getFeaturesFromSeq(seq, **kwargs):
 	elif f == "mapseq":
 		n = kwargs["n"]
 		features = map_seq(seq, AAn_dict[n])
+	elif f == 'AAn_ngram':
+		n = kwargs['n']
+		AAn = AAn_dict[kwargs['AAn']]
+		grams = all_AAn_n_grams(AAn, n)
+		features = AAn_n_gram_counts(seq, AAn, n, grams)
 	return features
 
 #Adds features to pre-existing X using getFeaturesFromSeq(seq, **kwargs)

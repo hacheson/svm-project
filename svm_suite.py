@@ -56,6 +56,7 @@ def feature_experiment():
 	clf = clf= svm.SVC(kernel='linear')
 	col = 0
 
+	"""
 	#AAcounts
 	X = addFeatures(seqs, X, feature="AAcounts")
 	val = train_test_SVM(np.array(X), np.array(Y), clf, 'strat_k_fold', k=4)
@@ -88,6 +89,20 @@ def feature_experiment():
 		write(col, 0, "ngrams, n=" + str(i), worksheet_write)
 		write(col, 1, val, worksheet_write)
 		col+=1
+	"""
+
+	#AAn_ngrams
+	for i in range(1, 6):
+		for j in range (3, 5):
+			X = [ [] for _ in range(0, len(seqs))] # Empty feature vector for every sequence
+			X = addFeatures(seqs, X, feature="AAn_ngram", AAn=i, n=j)
+			val = train_test_SVM(np.array(X), np.array(Y), clf, 'strat_k_fold', k=4)
+			write(col, 0, "AAn_ngram, AAn=" + str(i) + ", n=" + str(j)
+				, worksheet_write)
+			write(col, 1, val, worksheet_write)
+			col+=1
+		
+
 
 def write(x, y, value, worksheet):
 	worksheet.write(x, y, value)
