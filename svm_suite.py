@@ -101,6 +101,39 @@ def feature_experiment():
 				, worksheet_write)
 			write(col, 1, val, worksheet_write)
 			col+=1
+
+def rbf_gridsearch_experiment():
+	data = getData()
+	seqs = data[0]
+	X = [ [] for _ in range(0, len(seqs))] # Empty feature vector for every sequence
+	Y = data[1]
+
+	worksheet_write = book_write.add_sheet("rbf_gridsearch")
+
+	c_values = [pow(2,i) for i in range(-5,16)[::2]]
+	gamma_values = [pow(2,i) for i in range(-15,4)[::2]]
+
+	#write first row c headers to excel file
+	col = 1
+	for col, c in enumerate(c_values):
+		write(0, col, "C=" + str(c), worksheet_write)
+	
+	#gridsearch
+	row = 1
+	for gamma in gamma_values:
+		col = 0
+		#write left column header gamma
+		write(row, col, "g=" + str(gamma), worksheet_write)
+		for c in c_values:
+			col += 1
+			clf = clf= svm.SVC(kernel='rbf', C=c, gamma=gamma)
+			X = [ [] for _ in range(0, len(seqs))] # Empty feature vector for every sequence
+			X = addFeatures(seqs, X, feature="ngram", n=2)
+			val = train_test_SVM(np.array(X), np.array(Y), clf, 'strat_k_fold', k=4)
+			write(row, col, val, worksheet_write)
+		row+=1
+
+
 		
 
 
@@ -109,7 +142,8 @@ def write(x, y, value, worksheet):
 
 #poly_dimension_experiment()
 #experiment_with_k()
-feature_experiment()
+#feature_experiment()
+rbf_gridsearch_experiment()
 book_write.save("svm_output.xls")
 
 
