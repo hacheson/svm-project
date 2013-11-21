@@ -3,7 +3,7 @@ from xlrd import open_workbook
 from xlwt import *
 from sklearn import svm
 from sklearn import *
-from sklearn.cross_validation import KFold
+from sklearn.cross_validation import *
 from math import pow
 from collections import defaultdict 
 import hashlib
@@ -156,15 +156,28 @@ test_parameters: the parameters that were ordered with'''
 def train_test_SVM(X, Y, classifier, test_type, **kwargs):
 	#Train SVM
 	if test_type == 'k_fold':
-		print 'K: ' + str(kwargs["k"])
-		kf = KFold(len(Y), n_folds=kwargs["k"], indices=True)
+		num_folds = kwargs['k']
+		print 'K: ' + str(num_folds)
+		kf = KFold(len(Y), n_folds=num_folds, indices=True)
 		score_sum = 0
 		for train, test in kf:
 			score = classifier.fit(X[train], Y[train]).score(X[test], Y[test])
 			print "score: " + str(score)
 			score_sum += score
 		#we want the average of the predicted kernels
-		avg = score_sum/kwargs["k"]
+		avg = score_sum/num_folds
+		return avg
+	if test_type == 'strat_k_fold':
+		num_folds = kwargs['k']
+		print 'Strat_K: ' + str(num_folds)
+		skf = StratifiedKFold(Y, num_folds)
+		score_sum = 0
+		for train, test in skf:
+			score = classifier.fit(X[train], Y[train]).score(X[test], Y[test])
+			print "score: " + str(score)
+			score_sum += score
+		#we want the average of the predicted kernels
+		avg = score_sum/num_folds
 		return avg
 
 	

@@ -58,7 +58,7 @@ def feature_experiment():
 
 	#AAcounts
 	X = addFeatures(seqs, X, feature="AAcounts")
-	val = train_test_SVM(np.array(X), np.array(Y), clf, 'k_fold', k=4)
+	val = train_test_SVM(np.array(X), np.array(Y), clf, 'strat_k_fold', k=4)
 	write(col, 1, val, worksheet_write)
 	write(col, 0, "AAcounts", worksheet_write)
 	col+=1
@@ -67,7 +67,7 @@ def feature_experiment():
 	for i in range(1,6):
 		X = [ [] for _ in range(0, len(seqs))] # Empty feature vector for every sequence
 		X = addFeatures(seqs, X, feature="AAncounts", n=i) #n=1-5
-		val = train_test_SVM(np.array(X), np.array(Y), clf, 'k_fold', k=4)
+		val = train_test_SVM(np.array(X), np.array(Y), clf, 'strat_k_fold', k=4)
 		write(col, 0, "AAncounts, n=" + str(i), worksheet_write)
 		write(col, 1, val, worksheet_write)
 		col+=1
@@ -75,7 +75,7 @@ def feature_experiment():
 	for i in range(1,6):
 		X = [ [] for _ in range(0, len(seqs))] # Empty feature vector for every sequence
 		X = addFeatures(seqs, X, feature="mapseq", n=i) #n=1-5
-		val = train_test_SVM(np.array(X), np.array(Y), clf, 'k_fold', k=4)
+		val = train_test_SVM(np.array(X), np.array(Y), clf, 'strat_k_fold', k=4)
 		write(col, 0, "mapseq, n=" + str(i), worksheet_write)
 		write(col, 1, val, worksheet_write)
 		col+=1
@@ -84,7 +84,7 @@ def feature_experiment():
 	for i in range(1,4):
 		X = [ [] for _ in range(0, len(seqs))] # Empty feature vector for every sequence
 		X = addFeatures(seqs, X, feature="ngram", n=i) #n=1-5
-		val = train_test_SVM(np.array(X), np.array(Y), clf, 'k_fold', k=4)
+		val = train_test_SVM(np.array(X), np.array(Y), clf, 'strat_k_fold', k=4)
 		write(col, 0, "ngrams, n=" + str(i), worksheet_write)
 		write(col, 1, val, worksheet_write)
 		col+=1
