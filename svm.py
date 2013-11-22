@@ -170,19 +170,34 @@ def map_seq(seq, AAn):
 	mapped_features += [0 for _ in range(max_seq_len-len(seq))] # pad with zero's (seqs have diff lengths)
 	return mapped_features
 
+#Count distance between next occurence of each AA
+#[G1, G2, G3, P1, P2, P3, ...]
+#G2 = num. of G's that were followed by a G 2 AA's later
 def AA_distances(seq, n):
 	AA = {'G':0, 'P': 1, 'A': 2, 'V':3, 'L':4,
 		'I':5, 'M':6, 'C':7, 'F':8, 'Y':9,
 		'W':10, 'H':11, 'K':12, 'R':13, 'Q':14,
 		'N':15,'E':16, 'D':17, 'S':18, 'T':19}
 
-	distances = [0]*20*n
+	distances = [0]*len(AA)*n
 
 	for i, A in enumerate(seq):
 		for j in range(i, len(seq)):
 			if seq[j] == A and j-i <= n:
 				dist = j-i
 				distances[AA[A]*n + (dist-1)] += 1
+	return distances
+
+#AA_distances but groupings instead of AA's themselves
+def AAn_distances(seq, AAn, n):
+	distances = [0]*len(set(AAn.values()))*n
+
+	for i, A in enumerate(seq):
+		for j in range(i, len(seq)):
+			if AAn[seq[j]] == AAn[A] and j-i <= n:
+				dist = j-i
+				#AAn's indexed from 1
+				distances[ (AAn[A]-1)*n + (dist-1)] += 1
 	return distances
 
 
@@ -273,6 +288,10 @@ def getFeaturesFromSeq(seq, **kwargs):
 	elif f == 'AA_distances':
 		n = kwargs['n']
 		features = AA_distances(seq, n)
+	elif f == 'AAn_distances':
+		n = kwargs['n']
+		AAn = AAn_dict[kwargs['AAn']]
+		features = AAn_distances(seq, AAn, n)
 	return features
 
 #Adds features to pre-existing X using getFeaturesFromSeq(seq, **kwargs)

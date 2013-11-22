@@ -100,8 +100,7 @@ def feature_experiment():
 				, worksheet_write)
 			write(row, 1, val, worksheet_write)
 			row+=1
-	"""
-
+	
 	#AA_distances
 	for i in range(21, 31):
 		X = [ [] for _ in range(0, len(seqs))] # Empty feature vector for every sequence
@@ -110,8 +109,18 @@ def feature_experiment():
 		write(row, 0, "AA_distances, n=" + str(i), worksheet_write)
 		write(row, 1, val, worksheet_write)
 		row+=1
+	"""
 
-	#C=32, gamma = pow(2, -11)
+	#AAn_distances
+	for i in range(1, 11):
+		for j in range(1,6):
+			X = [ [] for _ in range(0, len(seqs))] # Empty feature vector for every sequence
+			X = addFeatures(seqs, X, feature="AAn_distances", n=i, AAn=j)
+			val = train_test_SVM(np.array(X), np.array(Y), clf, 'strat_k_fold', k=4)
+			write(row, 0, "AAn_distances, n=" + str(i) +", AAn=" + str(j),
+				worksheet_write)
+			write(row, 1, val, worksheet_write)
+			row+=1
 
 def rbf_gridsearch_experiment():
 	data = getData()
@@ -143,9 +152,6 @@ def rbf_gridsearch_experiment():
 			val = train_test_SVM(np.array(X), np.array(Y), clf, 'strat_k_fold', k=4)
 			write(row, col, val, worksheet_write)
 		row+=1
-
-
-		
 
 
 def write(x, y, value, worksheet):
