@@ -153,14 +153,45 @@ def rbf_gridsearch_experiment():
 			write(row, col, val, worksheet_write)
 		row+=1
 
+from sklearn.metrics import *
+from sklearn import svm
+import numpy as np
+def confusion_matrix_experiment():
+	data = getData()
+	seqs = data[0]
+	X = [ [] for _ in range(0, len(seqs))] # Empty feature vector for every sequence
+	X = addFeatures(seqs, X, feature="ngram", n=2)
+	Y = data[1]
+	clf = clf= svm.SVC(kernel='linear')
+
+	folds = 4
+	skf = StratifiedKFold(np.array(Y), folds)
+	i = 0
+	for train, test in skf:
+		clf.fit(np.array(X)[train], np.array(Y)[train])
+		Y_true = np.array(Y)[test]
+		Y_pred = clf.predict(np.array(X)[test])
+		cm = confusion_matrix(Y_true, Y_pred)
+
+		worksheet_write = book_write.add_sheet("confusion"+str(i))
+		write_matrix(cm, worksheet_write)
+		i += 1
+
+def write_matrix(m, worksheet_write):
+	for row in range(0,len(m)):
+		for col in range(0, len(m[0])):
+			write(row, col, m[row][col], worksheet_write)
+
+
 
 def write(x, y, value, worksheet):
 	worksheet.write(x, y, value)
 
 #poly_dimension_experiment()
 #experiment_with_k()
-feature_experiment()
+#feature_experiment()
 #rbf_gridsearch_experiment()
+confusion_matrix_experiment()
 book_write.save("svm_output.xls")
 
 
