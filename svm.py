@@ -10,8 +10,6 @@ import hashlib
 import itertools
 import numpy as np
 
-
-
 #http://en.wikipedia.org/wiki/Amino_acid#Classification
 """
 Aliphatic:	Glycine, Alanine, Valine, Leucine, Isoleucine
@@ -172,6 +170,22 @@ def map_seq(seq, AAn):
 	mapped_features += [0 for _ in range(max_seq_len-len(seq))] # pad with zero's (seqs have diff lengths)
 	return mapped_features
 
+def AA_distances(seq, n):
+	AA = {'G':0, 'P': 1, 'A': 2, 'V':3, 'L':4,
+		'I':5, 'M':6, 'C':7, 'F':8, 'Y':9,
+		'W':10, 'H':11, 'K':12, 'R':13, 'Q':14,
+		'N':15,'E':16, 'D':17, 'S':18, 'T':19}
+
+	distances = [0]*20*n
+
+	for i, A in enumerate(seq):
+		for j in range(i, len(seq)):
+			if seq[j] == A and j-i <= n:
+				dist = j-i
+				distances[AA[A]*n + (dist-1)] += 1
+	return distances
+
+
 
 '''X, Y input vectors,
 classifier the different classifier with varying kernels,
@@ -256,6 +270,9 @@ def getFeaturesFromSeq(seq, **kwargs):
 		AAn = AAn_dict[kwargs['AAn']]
 		grams = all_AAn_n_grams(AAn, n)
 		features = AAn_n_gram_counts(seq, AAn, n, grams)
+	elif f == 'AA_distances':
+		n = kwargs['n']
+		features = AA_distances(seq, n)
 	return features
 
 #Adds features to pre-existing X using getFeaturesFromSeq(seq, **kwargs)
@@ -263,31 +280,3 @@ def addFeatures(seqs, X, **kwargs):
 	for i, seq in enumerate(seqs):
 		X[i] += getFeaturesFromSeq(seq, **kwargs)
 	return X
-
-
-
-'''
-THIS IS WHERE WE ACTUALLY DO STUFF.
-
-'''
-
-
-
-'''data = getData()
-seqs = data[0]
-X = [ [] for _ in range(0, len(seqs))] # Empty feature vector for every sequence
-Y = data[1]
-
-X = addFeatures(seqs, X, feature="ngram", n=2)
-X = addFeatures(seqs, X, feature="mapseq", n=1)
-clf = clf= svm.SVC(kernel='linear')
-train_test_SVM(np.array(X), np.array(Y), clf, 'k_fold', [3])'''
-
-'''X_train = X[0:1100]
-Y_train = Y[0:1100]
-X_test = X[1100:]
-Y_test = Y[1100:]
-
-clf= svm.SVC(kernel='linear').fit(X_train, Y_train)
-print clf.score(X_test, Y_test)'''
-

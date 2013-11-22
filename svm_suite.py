@@ -54,42 +54,41 @@ def feature_experiment():
 	worksheet_write = book_write.add_sheet("features")
 	#write(0,0,"Features", worksheet_write)
 	clf = clf= svm.SVC(kernel='linear')
-	col = 0
+	row = 0
 
 	"""
 	#AAcounts
 	X = addFeatures(seqs, X, feature="AAcounts")
 	val = train_test_SVM(np.array(X), np.array(Y), clf, 'strat_k_fold', k=4)
-	write(col, 1, val, worksheet_write)
-	write(col, 0, "AAcounts", worksheet_write)
-	col+=1
+	write(row, 1, val, worksheet_write)
+	write(row, 0, "AAcounts", worksheet_write)
+	row+=1
 
 	#AAncounts
 	for i in range(1,6):
 		X = [ [] for _ in range(0, len(seqs))] # Empty feature vector for every sequence
 		X = addFeatures(seqs, X, feature="AAncounts", n=i) #n=1-5
 		val = train_test_SVM(np.array(X), np.array(Y), clf, 'strat_k_fold', k=4)
-		write(col, 0, "AAncounts, n=" + str(i), worksheet_write)
-		write(col, 1, val, worksheet_write)
-		col+=1
+		write(row, 0, "AAncounts, n=" + str(i), worksheet_write)
+		write(row, 1, val, worksheet_write)
+		row+=1
 	#mapseq
 	for i in range(1,6):
 		X = [ [] for _ in range(0, len(seqs))] # Empty feature vector for every sequence
 		X = addFeatures(seqs, X, feature="mapseq", n=i) #n=1-5
 		val = train_test_SVM(np.array(X), np.array(Y), clf, 'strat_k_fold', k=4)
-		write(col, 0, "mapseq, n=" + str(i), worksheet_write)
-		write(col, 1, val, worksheet_write)
-		col+=1
+		write(row, 0, "mapseq, n=" + str(i), worksheet_write)
+		write(row, 1, val, worksheet_write)
+		row+=1
 
 	#ngrams
 	for i in range(1,4):
 		X = [ [] for _ in range(0, len(seqs))] # Empty feature vector for every sequence
 		X = addFeatures(seqs, X, feature="ngram", n=i) #n=1-5
 		val = train_test_SVM(np.array(X), np.array(Y), clf, 'strat_k_fold', k=4)
-		write(col, 0, "ngrams, n=" + str(i), worksheet_write)
-		write(col, 1, val, worksheet_write)
-		col+=1
-	"""
+		write(row, 0, "ngrams, n=" + str(i), worksheet_write)
+		write(row, 1, val, worksheet_write)
+		row+=1
 
 	#AAn_ngrams
 	for i in range(1, 6):
@@ -97,10 +96,22 @@ def feature_experiment():
 			X = [ [] for _ in range(0, len(seqs))] # Empty feature vector for every sequence
 			X = addFeatures(seqs, X, feature="AAn_ngram", AAn=i, n=j)
 			val = train_test_SVM(np.array(X), np.array(Y), clf, 'strat_k_fold', k=4)
-			write(col, 0, "AAn_ngram, AAn=" + str(i) + ", n=" + str(j)
+			write(row, 0, "AAn_ngram, AAn=" + str(i) + ", n=" + str(j)
 				, worksheet_write)
-			write(col, 1, val, worksheet_write)
-			col+=1
+			write(row, 1, val, worksheet_write)
+			row+=1
+	"""
+
+	#AA_distances
+	for i in range(21, 31):
+		X = [ [] for _ in range(0, len(seqs))] # Empty feature vector for every sequence
+		X = addFeatures(seqs, X, feature="AA_distances", n=i)
+		val = train_test_SVM(np.array(X), np.array(Y), clf, 'strat_k_fold', k=4)
+		write(row, 0, "AA_distances, n=" + str(i), worksheet_write)
+		write(row, 1, val, worksheet_write)
+		row+=1
+
+	#C=32, gamma = pow(2, -11)
 
 def rbf_gridsearch_experiment():
 	data = getData()
@@ -142,8 +153,8 @@ def write(x, y, value, worksheet):
 
 #poly_dimension_experiment()
 #experiment_with_k()
-#feature_experiment()
-rbf_gridsearch_experiment()
+feature_experiment()
+#rbf_gridsearch_experiment()
 book_write.save("svm_output.xls")
 
 
