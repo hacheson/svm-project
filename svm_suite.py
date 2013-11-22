@@ -182,6 +182,21 @@ def write_matrix(m, worksheet_write):
 		for col in range(0, len(m[0])):
 			write(row, col, m[row][col], worksheet_write)
 
+def unbalanced_data_experiment():
+	data = getData()
+	seqs = data[0]
+	X = [ [] for _ in range(0, len(seqs))] # Empty feature vector for every sequence
+	Y = data[1]
+	worksheet_write = book_write.add_sheet("weighted_classes")
+	#AUTO adjust weights to be inversely proportional to class frequency
+	clf = clf= svm.SVC(kernel='linear', class_weight='auto')
+
+	row = 0
+	X = [ [] for _ in range(0, len(seqs))] # Empty feature vector for every sequence
+	X = addFeatures(seqs, X, feature="ngram", n=2) #n=1-5
+	val = train_test_SVM(np.array(X), np.array(Y), clf, 'strat_k_fold', k=4)
+	write(row, 0, "ngrams, n=2", worksheet_write)
+	write(row, 1, val, worksheet_write)
 
 
 def write(x, y, value, worksheet):
@@ -191,7 +206,8 @@ def write(x, y, value, worksheet):
 #experiment_with_k()
 #feature_experiment()
 #rbf_gridsearch_experiment()
-confusion_matrix_experiment()
+#confusion_matrix_experiment()
+unbalanced_data_experiment()
 book_write.save("svm_output.xls")
 
 
