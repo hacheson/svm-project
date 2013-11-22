@@ -127,6 +127,11 @@ def n_gram_counts(seq, n, all_n_grams):
 			gram += seq[j]
 		index = all_n_grams.index(gram)
 		occurences[index] += 1
+	#For RELATIVE frequencies
+	#Note: Choice of constant (50) makes a big difference
+	#After a certain threshold, increasing constant doesn't seem to improve
+	#for i, count in enumerate(occurences):
+	#	occurences[i] = float(count) / float(len(seq)) * 50
 	return occurences
 
 def AAn_n_gram_counts(seq, AAn, n, all_AAn_n_grams):
@@ -231,6 +236,7 @@ def train_test_SVM(X, Y, classifier, test_type, **kwargs):
 			score_sum += score
 		#we want the average of the predicted kernels
 		avg = score_sum/num_folds
+		print "avg: " + str(avg)
 		return avg
 
 	

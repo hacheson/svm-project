@@ -81,14 +81,16 @@ def feature_experiment():
 		write(row, 1, val, worksheet_write)
 		row+=1
 
+	"""
 	#ngrams
-	for i in range(1,4):
+	for i in range(2,3):
 		X = [ [] for _ in range(0, len(seqs))] # Empty feature vector for every sequence
-		X = addFeatures(seqs, X, feature="ngram", n=i) #n=1-5
+		X = addFeatures(seqs, X, feature="ngram", n=i) 
 		val = train_test_SVM(np.array(X), np.array(Y), clf, 'strat_k_fold', k=4)
 		write(row, 0, "ngrams, n=" + str(i), worksheet_write)
 		write(row, 1, val, worksheet_write)
 		row+=1
+	"""
 
 	#AAn_ngrams
 	for i in range(1, 6):
@@ -109,7 +111,6 @@ def feature_experiment():
 		write(row, 0, "AA_distances, n=" + str(i), worksheet_write)
 		write(row, 1, val, worksheet_write)
 		row+=1
-	"""
 
 	#AAn_distances
 	for i in range(1, 11):
@@ -121,6 +122,7 @@ def feature_experiment():
 				worksheet_write)
 			write(row, 1, val, worksheet_write)
 			row+=1
+	"""
 
 def rbf_gridsearch_experiment():
 	data = getData()
@@ -204,10 +206,10 @@ def write(x, y, value, worksheet):
 
 #poly_dimension_experiment()
 #experiment_with_k()
-#feature_experiment()
+feature_experiment()
 #rbf_gridsearch_experiment()
 #confusion_matrix_experiment()
-unbalanced_data_experiment()
+#unbalanced_data_experiment()
 book_write.save("svm_output.xls")
 
 
