@@ -53,8 +53,10 @@ br = initialize_browser()
 
 def scrape_uniprot(uniprot_id):
     baseurl = "http://www.uniprot.org/uniprot/"
+    #print 'UNPROT: ' + str(uniprot_id)
     page = br.open(baseurl + uniprot_id)
     html = page.read()
+
     infos = []
 
     # get the line containing most information.
@@ -66,7 +68,6 @@ def scrape_uniprot(uniprot_id):
 
 #    print uniprot_info
     parse_uniprot_info_re = re.compile('UniProt identifier</acronym></p><p><textarea name="query" rows="\d" cols="\d+">&gt;sp\|.*\|(.*_HUMAN) (.*) OS=Homo sapiens GN=(.*) PE=\d+ SV=\d+\n')
-    print '!!!!!!!!!!!!!! prase: ' + str(parse_uniprot_info_re.findall(uniprot_info))
     info = parse_uniprot_info_re.findall(uniprot_info)
     if len(info) is not 0:
         (uniprot_name, full_name, hugo_name) = parse_uniprot_info_re.findall(uniprot_info)[0]
@@ -80,28 +81,32 @@ def scrape_uniprot(uniprot_id):
     else: 
         ensembl_id = " "
 
-#    function = re.findall('Function<\/acronym></td><td><p>(.*?) <a class="attribution"', html)[0]
-#    subunit_structure = re.findall('Subunit structure<\/acronym></td><td><p>(.*?) <a class="attribution"', html)
-    function = re.findall('Function<\/acronym></td><td><p>(.*?) *Subunit', html)[0]
-    function = re.sub('<.*?>', '', function)
-    function = re.sub('Ref\.\d+', '', function)
-    subunit_structure = re.findall('Subunit structure<\/acronym></td><td><p>(.*?) <acronym', html)[0]
-    subunit_structure = re.sub('<.*?>', '\t', subunit_structure)
-    subunit_structure = re.sub('Ref\.\d+', '\t', subunit_structure)
-
-    #molecular_function = re.findall('Molecular_function(.*?)Complete GO annotation...', subunit_structure)
-    molecular_function = re.findall('Molecular function(.*?)Technical term', subunit_structure)
-    mo_fun_arr = molecular_function[0].split('\t')
     functions = []
-    for word in mo_fun_arr:
-        if not (word.startswith('&') or word.strip()==''):
-            functions.append(word)
-    #for word in mo_fun_arr:
-    #mo_fun_arr.remove('')
-    #mo_fun_arr.remove('&(.*)')
-    print "Molecular_function!!: " + str(functions)
-    infos = [full_name, hugo_name, uniprot_id, uniprot_name, ensembl_id, function, subunit_structure]
+    #print 'html: ' + str(html)
+    molecular = re.findall('Molecular_function(.*)Complete GO annotation...', html)
+    #subunit = re.findall('Subunit structure<\/acronym></td><td><p>(.*?) <acronym', html)
+    #print '!!!!!!!!!!!!!!!!sub unit: ' + str(subunit_structure)
 
+    #print 'subunit: ' + str(subunit)
+    if len(molecular) is not 0:
+        molecular_function = molecular[0] 
+        molecular_function = re.sub('<.*?>', '\t', molecular_function)
+        molecular_function = re.sub('Ref\.\d+', '\t', molecular_function)
+
+
+        #molecular_function = re.findall('Molecular_function(.*?)Complete GO annotation...', subunit_structure)
+        #print 'molecular_function: ' + str(molecular_function)
+        #molecular_function = re.findall('Molecular function(.*?)Technical term', subunit_structure)
+        
+        mo_fun_arr = []
+        if len(molecular_function) is not 0:
+            mo_fun_arr = molecular_function.split('\t')
+        functions = []
+        for word in mo_fun_arr:
+            if not (word.startswith('. Source:') or word.strip()=='' or word.startswith('Inferred')
+                or word.startswith('PubMed')):
+                functions.append(word)
+        
     return functions #returns the list of functions
     #return html, infos
 
@@ -114,6 +119,8 @@ def test_scrape_uniprot():
 
 
 def scrape_list_ids(on_screen=False):
+    function_dict = {}
+    all_functions = []
     """
     call scrape_uniprot() on a list of Uniprot IDs saved to a file
     """
@@ -124,16 +131,20 @@ def scrape_list_ids(on_screen=False):
         if line:
             id_list.append(line)
 
-    print "Full_Name\tHugo_Name\tUniprot_ID\tUniprot_name\tEnsembl_ID\tFuntion(Uniprot)\tSubunit_Structure(Uniprot)\n"
+    #print "Full_Name\tHugo_Name\tUniprot_ID\tUniprot_name\tEnsembl_ID\tFuntion(Uniprot)\tSubunit_Structure(Uniprot)\n"
     for uniprot_id in id_list:
-        (html, infos) = scrape_uniprot(uniprot_id)
-        if on_screen: # debugging purposes
-            print "-"*80 + "\n" + "%s\t"*5 % tuple(infos[:5]) + "\n\nFUNCTION: \n'%s'\n\nSUBUNITS: '%s'\n\n\n\n" % ( infos[5], infos[6])
-        else:
-            print "%s\t"*5 % tuple(infos[:5]) + "'%s'\t'%s'\n" % ( infos[5], infos[6])
-        time.sleep(2)
+        old_id = uniprot_id
+        uniprot_id = uniprot_id.split('_')[0]
+        new_list = scrape_uniprot(uniprot_id)
+        function_dict[old_id] = new_list
 
+        for item in new_list:
+            if item not in all_functions:
+                all_functions.append(item)
+       
+    return [function_dict, all_functions]
+
+    
 
 if __name__ == '__main__':
-#    (html, infos) = test_scrape_uniprot()
     scrape_list_ids(True)

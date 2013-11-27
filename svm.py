@@ -9,6 +9,9 @@ from collections import defaultdict
 import hashlib
 import itertools
 import numpy as np
+from scrape_uniprot import *
+
+
 
 #http://en.wikipedia.org/wiki/Amino_acid#Classification
 """
@@ -87,6 +90,23 @@ T - Threonine (Thr)
 AA = ['G', 'P', 'A', 'V', 'L', 'I', 'M', 'C',
 		'F', 'Y', 'W', 'H', 'K', 'R', 'Q', 'N',
 		'E', 'D', 'S', 'T']
+
+		
+#(seq, kwargs["id"], kwargs["function_dict"], kwargs["all_functions"])
+
+def function_features(seq, seq_id,function_dict, all_functions):
+	occurences = [0]*len(all_functions)
+	print "ID: " + str(seq_id)
+	function_list = function_dict[seq_id]
+	print "list: " + str(function_list)
+	for i in range(0, len(all_functions)):
+		func = all_functions[i]
+		if func in function_list:
+			occurences[i] = 1
+		
+	print 'END FUNCTION FEAUTRES'
+	return occurences
+
 
 #Returns list of all possible n_grams
 def all_n_grams(n):
@@ -253,18 +273,22 @@ subs_class_dict = {'dhpg':0,'horn':1, 'pip':2, 'bht':3, 'dab':4,'dhb':5,
 def getData():
 	seqs=[]
 	subs=[]
+	ids = []
 
 	book = open_workbook('Adomain_Substrate.xls')
 	worksheet = book.sheet_by_name('Adomain_Substrate')
 	num_rows = worksheet.nrows
+	id_cell = 0
 	substrate_cell = 1
 	seq_cell = 2
 	for i in range (1, num_rows):
 		seq = worksheet.cell_value(i, seq_cell)
 		substrate = worksheet.cell_value(i, substrate_cell)
+		seq_id = worksheet.cell_value(i, id_cell)
 		seqs.append(seq)
 		subs.append(subs_class_dict[substrate])
-	return (seqs, subs)
+		ids.append(seq_id)
+	return (seqs, subs, ids)
 
 #Return feature vector for a sequence
 #Takes variable keyword arguments
@@ -298,10 +322,19 @@ def getFeaturesFromSeq(seq, **kwargs):
 		n = kwargs['n']
 		AAn = AAn_dict[kwargs['AAn']]
 		features = AAn_distances(seq, AAn, n)
+	elif f == 'functions':
+		features = function_features(seq, kwargs["id"], kwargs["function_dict"], kwargs["all_functions"])
 	return features
 
 #Adds features to pre-existing X using getFeaturesFromSeq(seq, **kwargs)
 def addFeatures(seqs, X, **kwargs):
+	print 'add features'
+	print kwargs["ids"]
+	#if kwargs["feature"] == 'functions'
 	for i, seq in enumerate(seqs):
-		X[i] += getFeaturesFromSeq(seq, **kwargs)
+		X[i] += getFeaturesFromSeq(seq, feature=kwargs["feature"], id= kwargs["ids"][i], function_dict=kwargs["function_dict"], all_functions=kwargs["all_functions"])
 	return X
+
+
+#function_features()
+#print getData()
