@@ -55,6 +55,7 @@ def scrape_uniprot(uniprot_id):
     baseurl = "http://www.uniprot.org/uniprot/"
     #print 'UNPROT: ' + str(uniprot_id)
     page = br.open(baseurl + uniprot_id)
+    print "uniprot: " + str(uniprot_id)
     html = page.read()
 
     infos = []

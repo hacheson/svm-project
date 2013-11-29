@@ -202,7 +202,7 @@ def unbalanced_data_experiment():
 	write(row, 0, "ngrams, n=2", worksheet_write)
 	write(row, 1, val, worksheet_write)
 
-
+#Runs the experiment that scrapes uniprot to get the molecular function that we want.
 def function_experiment():
 	data = getData()
 	seqs = data[0]
@@ -213,20 +213,23 @@ def function_experiment():
 	clf = clf= svm.SVC(kernel='linear', class_weight='auto')
 	row = 0
 	X = [ [] for _ in range(0, len(seqs))] # Empty feature vector for every sequence
-	scrape_info = scrape_list_ids(True)
+	'''scrape_info = scrape_list_ids(True)
 	feature_dict = scrape_info[0]
 	all_features = scrape_info[1]
-	seq_ids = data[2]
-	X = addFeatures(seqs, X, feature="functions", ids=seq_ids, function_dict=feature_dict, all_functions=all_features) #n=1-5
-	
+	seq_ids = data[2]'''
+	X = addFeatures(seqs, X, feature="ngram", n=3) 
+	#X = addFeatures(seqs, X, feature="functions", ids=seq_ids, function_dict=feature_dict, all_functions=all_features) #n=1-5
+
 	print 'done adding features'
-	print "all features: " + str(all_features) + "len: " + str(len(all_features))
+	#print "all features: " + str(all_features) + "len: " + str(len(all_features))
 	clf = clf= svm.SVC(kernel='linear', class_weight='auto')
 	row = 0
 	val = train_test_SVM(np.array(X), np.array(Y), clf, 'strat_k_fold', k=5)
 	write(row, 0, "function type", worksheet_write)
 	write(row, 1, val, worksheet_write)
 	print 'X: ' + str(X)
+	print "VAL: " + str(val)
+
 	print "END"
 
 

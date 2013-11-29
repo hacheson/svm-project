@@ -329,11 +329,16 @@ def getFeaturesFromSeq(seq, **kwargs):
 #Adds features to pre-existing X using getFeaturesFromSeq(seq, **kwargs)
 def addFeatures(seqs, X, **kwargs):
 	print 'add features'
-	print kwargs["ids"]
 	#if kwargs["feature"] == 'functions'
-	for i, seq in enumerate(seqs):
-		X[i] += getFeaturesFromSeq(seq, feature=kwargs["feature"], id= kwargs["ids"][i], function_dict=kwargs["function_dict"], all_functions=kwargs["all_functions"])
-	return X
+	if kwargs["feature"] == 'functions':
+
+		for i, seq in enumerate(seqs):
+			X[i] += getFeaturesFromSeq(seq, feature=kwargs["feature"], id= kwargs["ids"][i], function_dict=kwargs["function_dict"], all_functions=kwargs["all_functions"])
+		return X
+	else:
+		for i, seq in enumerate(seqs):
+			X[i] += getFeaturesFromSeq(seq, feature=kwargs["feature"], n=kwargs["n"])
+		return X
 
 
 #function_features()
