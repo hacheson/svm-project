@@ -10,6 +10,7 @@ import hashlib
 import itertools
 import numpy as np
 from scrape_uniprot import *
+from global_alignment import *
 
 
 
@@ -106,6 +107,33 @@ def function_features(seq, seq_id,function_dict, all_functions):
 		
 	print 'END FUNCTION FEAUTRES'
 	return occurences
+
+def alignment_features(seq, sequences):
+	similarity = [0] * len(sequences)
+	scores = [0]* len(sequences)
+	for i in range(0, len(sequences)):
+		score = getAlignment(seq, sequences[i], 1, -1, -1)
+		scores[i] = score
+
+	
+	
+	my_max = np.max(scores)
+	old_scores = np.copy(scores)
+	scores.remove(my_max)	#remove the highest score because that is the same
+	my_max = np.max(scores)
+	stdv = np.std(scores)
+	thresh = my_max - stdv
+
+
+	print 'stdv: ' + str(stdv)
+	print 'max: ' + str(my_max)
+	print 'thresh: ' + str(thresh)
+	for i in range(0, len(sequences)):
+		if old_scores[i]>thresh:
+			similarity[i] = 1
+	
+	print similarity
+	return similarity
 
 
 #Returns list of all possible n_grams
@@ -324,6 +352,8 @@ def getFeaturesFromSeq(seq, **kwargs):
 		features = AAn_distances(seq, AAn, n)
 	elif f == 'functions':
 		features = function_features(seq, kwargs["id"], kwargs["function_dict"], kwargs["all_functions"])
+	elif f == 'alignment':
+		features = alignment_features(seq, kwargs["sequences"])
 	return features
 
 #Adds features to pre-existing X using getFeaturesFromSeq(seq, **kwargs)
@@ -331,9 +361,12 @@ def addFeatures(seqs, X, **kwargs):
 	print 'add features'
 	#if kwargs["feature"] == 'functions'
 	if kwargs["feature"] == 'functions':
-
 		for i, seq in enumerate(seqs):
 			X[i] += getFeaturesFromSeq(seq, feature=kwargs["feature"], id= kwargs["ids"][i], function_dict=kwargs["function_dict"], all_functions=kwargs["all_functions"])
+		return X
+	elif kwargs["feature"] == 'alignment':
+		for i, seq in enumerate(seqs):
+			X[i] += getFeaturesFromSeq(seq, feature=kwargs["feature"], sequences=seqs)
 		return X
 	else:
 		for i, seq in enumerate(seqs):

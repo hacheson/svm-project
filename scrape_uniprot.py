@@ -15,6 +15,7 @@ import re
 import time
 import cookielib
 import sys
+from global_alignment import *
 
 # DEFINE YOUR EMAIL ADDRESS HERE
 user_mail = 'hannahaf@hotmail.com'
